@@ -1,0 +1,7 @@
+## $util.error($util.toJson($context.result))
+#set($result={
+	"afterKey":$context.result.aggregations.groupByVenue.after_key,
+    "items":$context.result.aggregations.groupByVenue.buckets
+})
+
+$util.toJson($result)

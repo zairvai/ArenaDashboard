@@ -1,0 +1,115 @@
+{
+	"auth": {
+		"ArenaAuth": {
+			"service": "Cognito",
+			"providerPlugin": "awscloudformation",
+			"dependsOn": [
+				{
+					"category": "function",
+					"resourceName": "ArenaAuthPostConfirmation",
+					"triggerProvider": "Cognito",
+					"attributes": [
+						"Arn",
+						"Name"
+					]
+				}
+			]
+		}
+	},
+	"api": {
+		"ArenaGraphQL": {
+			"service": "AppSync",
+			"providerPlugin": "awscloudformation",
+			"output": {
+				"authConfig": {
+					"additionalAuthenticationProviders": [
+						{
+							"authenticationType": "API_KEY",
+							"apiKeyConfig": {
+								"description": "Arena Testing Key",
+								"apiKeyExpirationDays": "365"
+							}
+						},
+						{
+							"authenticationType": "AWS_IAM"
+						}
+					],
+					"defaultAuthentication": {
+						"authenticationType": "AMAZON_COGNITO_USER_POOLS",
+						"userPoolConfig": {
+							"userPoolId": "authArenaAuth"
+						}
+					}
+				}
+			}
+		}
+	},
+	"function": {
+		"ArenaIdentityManager": {
+			"service": "Lambda",
+			"providerPlugin": "awscloudformation",
+			"build": true,
+			"dependsOn": [
+				{
+					"category": "auth",
+					"resourceName": "ArenaAuth",
+					"attributes": [
+						"UserPoolId"
+					]
+				},
+				{
+					"category": "api",
+					"resourceName": "ArenaGraphQL",
+					"attributes": [
+						"GraphQLAPIIdOutput",
+						"GraphQLAPIEndpointOutput"
+					]
+				}
+			]
+		},
+		"ArenaTableAppTrigger": {
+			"service": "Lambda",
+			"providerPlugin": "awscloudformation",
+			"build": true,
+			"dependsOn": [
+				{
+					"category": "function",
+					"resourceName": "ArenaIdentityManager",
+					"attributes": [
+						"Name"
+					]
+				},
+				{
+					"category": "function",
+					"resourceName": "ArenaSearchManager",
+					"attributes": [
+						"Name"
+					]
+				},
+				{
+					"category": "function",
+					"resourceName": "ArenaUpdateVenueFacilities",
+					"attributes": [
+						"Name"
+					]
+				}
+			]
+		},
+		"ArenaSearchManager": {
+			"service": "Lambda",
+			"providerPlugin": "awscloudformation",
+			"build": true
+		},
+		"ArenaAuthPostConfirmation": {
+			"service": "Lambda",
+			"providerPlugin": "awscloudformation",
+			"build": true,
+			"dependsOn": []
+		},
+		"ArenaQueueUpdateFacilityByVenueId": {
+			"service": "Lambda",
+			"providerPlugin": "awscloudformation",
+			"build": true
+		}
+	}
+}

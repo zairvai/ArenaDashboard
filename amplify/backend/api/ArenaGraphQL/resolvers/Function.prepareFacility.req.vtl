@@ -1,0 +1,13 @@
+$util.qr($ctx.stash.input.put("account",$ctx.prev.result.account))
+
+#set($venue={
+    "id":$ctx.prev.result.id,
+    "openHours":$util.defaultIfNull($ctx.prev.result.openHours,[]),
+    "location":$ctx.prev.result.location,
+    "address":$ctx.prev.result.address,
+    "status":$ctx.prev.result.status
+})
+
+$util.qr($ctx.stash.input.put("venue",$venue))
+
+{}

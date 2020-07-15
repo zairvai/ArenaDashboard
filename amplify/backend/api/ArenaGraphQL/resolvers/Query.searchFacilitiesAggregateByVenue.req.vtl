@@ -1,0 +1,162 @@
+## building elastic search query as : 
+## {
+## 	"query":{
+## 		"bool":{
+##     		"must_not":[],
+##         		"filter":[]
+##     	}
+## 	},
+## 	"size":0,
+## 	"aggs":composite
+## 	}
+
+
+#set($size = $util.defaultIfNull($ctx.args.input.size, 20))
+#set($availableOnly =  $util.defaultIfNull($ctx.args.input.availableOnly, false))
+
+##formating date time
+#if(!$util.isNull($ctx.args.input.start) && !$util.isNull($ctx.args.input.end))
+	
+    #set($nowMillis = $util.time.nowEpochMilliSeconds())
+    
+    #set( $startMillis = $util.time.parseISO8601ToEpochMilliSeconds($ctx.args.input.start) )
+    #set( $endMillis = $util.time.parseISO8601ToEpochMilliSeconds($ctx.args.input.end) )
+    
+    #set($dayOfWeek = $util.time.epochMilliSecondsToFormatted($startMillis, "F"))
+    
+    #set($startHour = $util.time.epochMilliSecondsToFormatted($startMillis,"HH:mm:ss"))
+   	#set($endHour = $util.time.epochMilliSecondsToFormatted($endMillis,"HH:mm:ss"))
+    
+    ## $util.error($startHour)
+    
+    #if($startMillis >= $endMillis)
+		$util.error("Start date is greater than and equal to End date.", "Date Error")
+    #elseif( $startMillis < $nowMillis || $endMillis < $nowMillis )
+      	$util.error("Start date or End date less than Current date.", "Date Error")
+    #end
+    
+#end
+
+#if($ctx.args.input.distance=="km10")
+	#set($distance = "10km")
+#elseif( $ctx.args.input.distance=="km5" )
+	#set($distance = "5km")
+#else
+	#set($distance = "1km")
+#end
+
+#set($mustNot=
+  [
+	  {"match":{"type":"booking"}}
+  ]
+)
+
+## check booking child
+#if($availableOnly && $ctx.args.input.start && $ctx.args.input.end)
+  $util.qr($mustNot.add(
+  {
+      "has_child":{
+          "type":"booking",
+          "query":{
+              "bool":{
+                  "filter":{
+                      "range":{
+                          "booking.time":{
+                              "gte":"${ctx.args.input.start}",
+                              "lte":"${ctx.args.input.end}",
+                              "relation":"intersects"
+                          }
+                      }
+                  }
+              }
+          }
+      }
+  }))
+  
+#end
+
+#set($filter=[
+	{
+      "geo_distance" : {
+          "distance" : "${distance}",
+          "venue.location" : [$ctx.args.input.location.lon,$ctx.args.input.location.lat]
+      }
+    }
+])
+
+#if($availableOnly && $ctx.args.input.start && $ctx.args.input.end)
+                          
+	$util.qr($filter.add(
+      {"nested": {
+          "path": "venue.openHours",
+          "query": {
+            "bool": {
+              "must": [
+                {"match": {"venue.openHours.day": "${dayOfWeek}"}},
+                {
+                	"range": {
+                    	"venue.openHours.time": {
+                      		"gte": "${startHour}",
+                            "lte": "${endHour}",
+                            "relation":"contains"
+                    	}
+                	}
+                }
+              ]
+            }
+          }
+        }
+    }))
+  
+#end
+
+#if(!$util.isNull($ctx.args.input.category))
+	$util.qr($filter.add(
+    {
+      	"match":{"category":"${ctx.args.input.category}" }
+    }))
+#end
+
+#if(!$util.isNull($ctx.args.input.courtType))
+	$util.qr($filter.add(
+    {
+      	"match":{"courtType":"${ctx.args.input.courtType}" }
+    }))
+#end
+
+#set($bool={
+	"must_not":$mustNot,
+    "filter":$filter
+})
+
+#set( $query={
+  "bool": $bool
+})
+
+
+#set($aggs = {
+  "groupByVenue": {
+    "composite": {
+      "size":20,
+      "sources": [
+        {"id":{"terms":{"field":"venue.id.keyword","missing_bucket":true}}}
+      ]
+    }
+  }
+})
+
+{
+    "version" : "2017-02-28",
+    "operation": "Invoke",
+    "payload": {
+      "field":"get",
+      "arguments":{
+        "path":"/facility/_search",
+        "body":{
+          "size":0,
+          "query":$util.toJson($query),
+          "aggs":$util.toJson($aggs),
+        }
+      }
+    }
+}

@@ -1,0 +1,62 @@
+## By default in a before template, all you need is a valid JSON payload.
+## You can also stash data to be made available to the functions in the pipeline.
+## Examples: 
+## - $ctx.stash.put("email", $ctx.args.email)
+## - $ctx.stash.put("badgeNumber", $ctx.args.input.badgeNumber)
+## - $ctx.stash.put("username", $ctx.identity.username)
+
+#set( $input = {} )
+
+#if( !$util.isNull($ctx.args.input.name ))
+	$util.qr($input.put("name",$ctx.args.input.name))
+#end
+
+#if( !$util.isNull($ctx.args.input.openHours ))
+	$util.qr($input.put("openHours",$ctx.args.input.openHours))
+#end
+
+#if( !$util.isNull($ctx.args.input.location ))
+	$util.qr($input.put("location",$ctx.args.input.location))
+#end
+
+#if( !$util.isNull($ctx.args.input.description ))
+	$util.qr($input.put("description",$ctx.args.input.description))
+#end
+
+#if( !$util.isNull($ctx.args.input.price ))
+	$util.qr($input.put("price",$ctx.args.input.price))
+#end
+
+#if( !$util.isNull($ctx.args.input.entryType ))
+	$util.qr($input.put("entryType",$ctx.args.input.entryType))
+#end
+
+#if( !$util.isNull($ctx.args.input.courtType ))
+	$util.qr($input.put("courtType",$ctx.args.input.courtType))
+#end
+
+#if( !$util.isNull($ctx.args.input.tags ))
+	$util.qr($input.put("tags",$ctx.args.input.tags))
+#end
+
+#if( !$util.isNull($ctx.args.input.availStatus ))
+	$util.qr($input.put("availStatus",$ctx.args.input.availStatus))
+#end
+
+#if( !$util.isNull($ctx.args.input.status ))
+	$util.qr($input.put("status",$ctx.args.input.status))
+#end
+
+#if($input.isEmpty() )
+	#{return}
+#end
+
+$util.qr($ctx.stash.put("id",$ctx.args.input.id))
+
+$util.qr($input.put("expectedVersion",$ctx.args.input.expectedVersion))
+$util.qr($input.put("updatedBy",$ctx.identity.sub))
+$util.qr($input.put("updatedAt",$util.time.nowISO8601()))
+
+$util.qr($ctx.stash.put("input",$input))
+
+{}

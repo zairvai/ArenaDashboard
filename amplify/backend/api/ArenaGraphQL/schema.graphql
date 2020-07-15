@@ -1,0 +1,490 @@
+type Mutation {
+
+	updateUser(input: UpdateUserInput!): User
+	
+	createAccount(input: CreateAccountInput!): Account
+	updateAccount(input: UpdateAccountInput!): Account
+	
+	createVenue(input: CreateVenueInput!): Venue
+	updateVenue(input: UpdateVenueInput!): Venue
+
+	createFacility(input:CreateFacilityInput!): Facility
+	updateFacility(input:UpdateFacilityInput!): Facility
+
+	createBooking(input:CreateBookingInput!):Booking
+
+	createTicket(input:CreateTicketInput!):Ticket
+
+	deleteAccount(input:DeleteItemInput!):Account
+	deleteVenue(input:DeleteItemInput!):Venue
+	deleteFacility(input:DeleteItemInput!):Facility
+	deleteBooking(input:DeleteItemInput!):Booking
+	deleteTicket(input:DeleteItemInput!):Ticket
+	
+}
+
+type Query {
+
+	getUserByUsername(username:String!):User @aws_api_key @aws_cognito_user_pools
+
+	getAccount(input:GetItemInput!):Account	
+	getVenue(input:GetItemInput!):Venue
+	getFacility(input:GetItemInput!):Facility
+	getBooking(input:GetItemInput!):Booking
+	getTicket(input:GetItemInput!):Ticket
+
+	listUsers(input:ListItemInput):UserConnection
+	listAccounts(input:ListItemInput):AccountConnection
+	listVenues(input:ListVenueInput):VenueConnection
+	listFacilities(input:ListFacilityInput):FacilityConnection
+	listBookings(input:ListBookingInput):BookingConnection
+	
+	searchFacilitiesAggregateByVenue(input:SearchFacilitiesInput!):VenueAggregateConnection
+}
+
+
+
+type UserConnection{
+	items:[User]
+	foundDocs:Int
+}
+
+type AccountConnection{
+	items:[Account]
+	foundDocs:Int
+}
+
+type VenueConnection{
+	items:[Venue]
+	foundDocs:Int
+}
+
+type FacilityConnection{
+	items:[Facility]
+	foundDocs:Int
+}
+
+type BookingConnection{
+	items:[Booking]
+	foundDocs:Int
+}
+
+
+type VenueAggregateConnection{
+	items:[Venue]
+	afterKey:AWSJSON
+}
+
+enum RangeDistance{
+	km1
+	km5
+	km10
+}
+
+# enum StatusType {
+# 	Active
+# 	Inactive
+# 	Deleted
+# }
+
+# enum AvailableStatusType{
+# 	Open
+# 	Closed
+# }
+
+enum BookingStatusType{
+	Pending
+	Paid
+	Canceled
+}
+
+enum SocialMediaChannel{
+	Instagram
+	Facebook
+	Twitter
+	YouTube
+}
+
+enum FacilityType{
+	Soccer
+	Futsal
+	Badminton
+	BasketBall
+	Gym
+}
+
+enum CourtType{
+	Grass
+	Concrete
+	Clay
+	Rubber
+	Synthetic
+}
+
+enum EntryFeeType{
+	Free
+	Paid
+}
+
+enum PricingSessionType{
+	Hour
+	Day
+	Week
+	Month
+	Year
+	Custom
+}
+
+input GetItemInput{
+  	id:ID!
+}
+
+input DeleteItemInput {
+	id: ID!
+}
+
+input ListItemInput {
+	orderBy: String
+	direction: String
+	from:Int
+	size:Int
+}
+
+input ListVenueInput{
+	accountId:ID
+	orderBy: String
+	direction: String
+	from:Int
+	size:Int
+}
+
+input ListFacilityInput{
+	accountId:ID
+	venueId:ID
+	orderBy: String
+	direction: String
+	from:Int
+	size:Int
+}
+
+input ListBookingInput{
+	accountId:ID
+	venueId:ID
+	facilityId:ID
+	start:AWSDateTime
+	end:AWSDateTime
+	createdAt:AWSDateTime
+	createdBy:ID
+	orderBy: String
+	direction: String
+	from:Int
+	size:Int
+}
+
+input UpdateUserInput {
+	id: ID!
+	name: String
+	emailAddress: AWSEmail
+	status: Int
+	expectedVersion: Int
+}
+
+input CreateAccountInput {
+	name: String!
+	description:String
+}
+
+input UpdateAccountInput {
+	id: ID!
+	name: String
+	status: Int
+	expectedVersion: Int
+}
+
+input LocationInput{
+	lat:Float
+	lon:Float
+}
+
+
+input OpenHourInput{
+	day:String
+	from:AWSTime
+	to:AWSTime
+}
+
+input SocialMediaInput {
+	id: String
+	channel: SocialMediaChannel
+}
+
+type PhoneNumber{
+	label:String
+	phoneNumber:AWSPhone
+}
+
+input PhoneNumberInput{
+	label:String
+	phoneNumber:AWSPhone
+}
+
+input CreateVenueInput {
+	accountId:ID!
+	name: String!
+	location:LocationInput!
+	address:String!
+	phoneNumber:[PhoneNumberInput]
+	emailAddress:[AWSEmail]
+	socialMedia:[SocialMediaInput!]
+	openHours:[OpenHourInput!]
+	availStatus:Int!
+	tags:[String!]
+	description:String
+}
+
+input UpdateVenueInput {
+	id: ID!
+	name: String
+	location:LocationInput
+	address:String
+	phoneNumber:[PhoneNumberInput]
+	emailAddress:[AWSEmail]
+	socialMedia:[SocialMediaInput!]
+	openHours:[OpenHourInput!]
+	tags:[String!]
+	description:String
+	availStatus:Int
+	status: Int
+	expectedVersion: Int
+}
+
+input CreateFacilityInput {
+	accountId:ID!
+	venueId:ID!
+	name: String!
+	courtType:CourtType!
+	category:FacilityType!
+	entryType:EntryFeeType!
+	pricing:PricingSessionType!
+	price:[PriceRangeDefaultInput]!
+	openHours:[OpenHourInput!]!
+	availStatus:Int!
+	location:LocationInput!
+	address:String!
+	tags:[String!]
+	description:String
+}
+
+input UpdateFacilityInput {
+	id: ID!
+	entryType:EntryFeeType
+	pricing:PricingSessionType
+	price:[PriceRangeDefaultInput]
+	name: String
+	courtType:CourtType
+	openHours:[OpenHourInput!]
+	location:LocationInput
+	address:String
+	availStatus:Int
+	status: Int
+	tags:[String!]
+	description:String
+	expectedVersion: Int
+}
+
+input CreateBookingInput{
+	accountId:ID!
+	venueId:ID!
+	facilityId:ID!
+	pricing:PricingSessionType!
+	currency:String!
+	totalPrice:Float!
+	bookStatus:BookingStatusType!
+	discount:Float
+	promoCode:String
+	location:LocationInput ##location when user book facility
+	description:String
+}
+
+input CreateTicketInput{
+	bookingId:ID!
+	ticketStatus:Int!
+	start:AWSDateTime!
+	end:AWSDateTime!
+	location:LocationInput ##location when user redeemed ticket
+	description:String
+}
+
+input SearchFacilitiesInput{
+	location:LocationInput!
+	distance:RangeDistance!
+	category:FacilityType
+	courtType:CourtType
+	start:AWSDateTime
+	end:AWSDateTime
+	availableOnly:Boolean
+	size:Int
+}
+
+
+input PriceRangeHourInput{
+	start:AWSTime
+	end:AWSTime
+	amount:Float
+}
+
+input PriceRangeDefaultInput{
+	day:String
+	hours:[PriceRangeHourInput]
+}
+
+# input PriceRangeOverrideInput{
+# 	date:AWSDateTime
+# 	hours:[PriceRangeHourInput!]
+# }
+
+# input PriceInput{
+# 	default:[PriceRangeDefaultInput]
+# 	override:[PriceRangeOverrideInput]
+# }
+
+type OpenHour{
+	day:String
+	from:AWSTime
+	to:AWSTime
+}
+
+type Location{
+	lat:Float
+	lon:Float
+}
+
+type SocialMedia{
+	id:String
+	channel:SocialMediaChannel	
+}
+
+type PriceRangeHour{
+	start:AWSTime
+	end:AWSTime
+	amount:Float
+}
+
+type PriceRangeDefault{
+	day:String
+	hours:[PriceRangeHour]
+}
+
+# type PriceRangeOverride{
+# 	date:AWSDateTime
+# 	hours:[PriceRangeHour!]
+# }
+
+# type Price{
+# 	default:[PriceRangeDefault]
+# 	override:[PriceRangeOverride]
+# }
+
+
+type User{
+	id:ID!@aws_api_key @aws_cognito_user_pools
+	name:String!@aws_api_key @aws_cognito_user_pools
+	emailAddress:AWSEmail!@aws_api_key @aws_cognito_user_pools
+	isEmailVerified:Boolean!@aws_api_key @aws_cognito_user_pools
+	phoneNumber:AWSPhone!@aws_api_key @aws_cognito_user_pools
+	isPhoneVerified:Boolean!@aws_api_key @aws_cognito_user_pools
+	createdAt:AWSDateTime!@aws_api_key @aws_cognito_user_pools
+	updatedAt:AWSDateTime!@aws_api_key @aws_cognito_user_pools
+	isEnabled:Boolean!@aws_api_key @aws_cognito_user_pools
+	status:String!@aws_api_key @aws_cognito_user_pools
+}
+
+type Account {
+	id: ID!
+	name: String!
+	status: Int
+	createdBy: User
+	updatedBy: User
+	createdAt: AWSDateTime
+	updatedAt: AWSDateTime
+	version: Int
+}
+
+
+type Venue{
+	id: ID!
+	account: Account!
+	name: String!
+	location: Location
+	address: String
+	phoneNumber:[PhoneNumber!]
+	emailAddress:[AWSEmail]
+	socialMedia:[SocialMedia!]
+	tags:[String!],
+	description: String
+	openHours: [OpenHour]
+	availStatus:Int
+	status: Int
+	createdBy: User
+	updatedBy: User
+	createdAt: AWSDateTime
+	updatedAt: AWSDateTime
+	version: Int
+}
+
+type Facility{
+	id:ID!
+	account:Account!
+	venue:Venue!
+	name:String!
+	courtType:CourtType!
+	entryType:EntryFeeType!
+	pricing:PricingSessionType!
+	price:[PriceRangeDefault]
+	location:Location
+	openHours:[OpenHour]
+	availStatus:Int
+	address:String
+	tags:[String!],
+	description:String
+	status: Int
+	createdBy: User
+	updatedBy: User
+	createdAt: AWSDateTime
+	updatedAt: AWSDateTime
+	version:Int
+}
+
+type Booking{
+	id:ID!
+	account:Account!
+	venue:Venue!
+	facility:Facility!
+	currency:String!
+	totalPrice:Float!
+	location:Location
+	status:Int
+	bookStatus: BookingStatusType
+	createdBy: User
+	updatedBy: User
+	createdAt: AWSDateTime
+	updatedAt: AWSDateTime
+	description:String
+	version:Int
+}
+
+type Ticket{
+	id:ID!
+	booking:Booking!
+	start:AWSDateTime!
+	end:AWSDateTime!
+	location:Location
+	ticketStatus:Int!
+	status:Int
+	createdBy:User
+  	updatedBy:User
+	createdAt: AWSDateTime
+	updatedAt: AWSDateTime
+	description:String
+	version: Int
+}

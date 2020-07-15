@@ -1,0 +1,22 @@
+#if( $context.error )
+	#{return}
+#end
+
+#set($result={})
+
+#foreach( $attribute in $context.result.UserAttributes )
+	#if($attribute.Name=="sub") $util.qr($result.put("id",$attribute.Value))
+    #elseif($attribute.Name=="email_verified") $util.qr($result.put("isEmailVerified",$attribute.Value))
+    #elseif($attribute.Name=="name") $util.qr($result.put("name",$attribute.Value))
+    #elseif($attribute.Name=="phone_number_verified") $util.qr($result.put("isPhoneVerified",$attribute.Value))
+    #elseif($attribute.Name=="phone_number") $util.qr($result.put("phoneNumber",$attribute.Value))
+    #elseif($attribute.Name=="email") $util.qr($result.put("emailAddress",$attribute.Value))
+    #end
+#end
+
+$util.qr($result.put("createdAt",$context.result.UserCreateDate))
+$util.qr($result.put("updatedAt",$context.result.UserLastModifiedDate))
+$util.qr($result.put("isEnabled",$context.result.Enabled))
+$util.qr($result.put("status",$context.result.UserStatus))
+
+$util.toJson($result)
